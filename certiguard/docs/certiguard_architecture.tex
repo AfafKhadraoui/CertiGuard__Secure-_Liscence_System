@@ -1,0 +1,622 @@
+\documentclass[11pt,a4paper]{article}
+
+% -------------------------------------------------
+% Required packages
+% -------------------------------------------------
+\usepackage[margin=1in]{geometry}
+\usepackage[table,dvipsnames]{xcolor}
+
+% -------------------------------------------------
+% Colors
+% -------------------------------------------------
+\definecolor{certiblue}{RGB}{37,99,235}
+\definecolor{certigreen}{RGB}{5,150,105}
+\definecolor{certired}{RGB}{220,38,38}
+\definecolor{certipurple}{RGB}{124,58,237}
+\definecolor{certidark}{RGB}{15,23,42}
+\definecolor{certigray}{RGB}{100,116,139}
+\definecolor{attackblue}{RGB}{219,234,254}
+\definecolor{attackgreen}{RGB}{220,252,231}
+\definecolor{attackorange}{RGB}{255,237,213}
+\definecolor{attackred}{RGB}{254,226,226}
+\definecolor{attackpurple}{RGB}{243,232,255}
+\definecolor{codebg}{RGB}{248,250,252}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,fit,backgrounds,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage[colorlinks=true,linkcolor=certiblue,citecolor=certiblue,urlcolor=certiblue]{hyperref}
+
+% -------------------------------------------------
+% Page style
+% -------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{certidark}{\small\textbf{CertiGuard SDK --- Architecture Document}}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% -------------------------------------------------
+% Section styling
+% -------------------------------------------------
+\titleformat{\section}
+{\Large\bfseries\color{certiblue}}
+{\thesection}{0.7em}{}
+[\vspace{0.2em}\color{certiblue}\titlerule]
+
+\titleformat{\subsection}
+{\large\bfseries\color{certidark}}
+{\thesubsection}{0.6em}{}
+
+\titleformat{\subsubsection}
+{\normalsize\bfseries\color{certidark}}
+{\thesubsubsection}{0.6em}{}
+
+% -------------------------------------------------
+% Listings style
+% -------------------------------------------------
+\lstdefinestyle{certicode}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{certiblue}\bfseries,
+  commentstyle=\color{certigray}\itshape,
+  stringstyle=\color{certigreen},
+  numbers=left,
+  numberstyle=\tiny\color{certigray},
+  numbersep=8pt,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{certigray},
+  breaklines=true,
+  showstringspaces=false
+}
+\lstset{style=certicode}
+
+% -------------------------------------------------
+% tcolorbox style
+% -------------------------------------------------
+\tcbset{
+  certicallout/.style={
+    colback=white,
+    colframe=certiblue,
+    boxrule=0pt,
+    borderline west={2.5pt}{0pt}{certiblue},
+    arc=2pt,
+    left=8pt,
+    right=8pt,
+    top=6pt,
+    bottom=6pt
+  }
+}
+
+% -------------------------------------------------
+% Helpers
+% -------------------------------------------------
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlist[itemize]{leftmargin=1.4em,itemsep=0.3em}
+\setlist[enumerate]{leftmargin=1.6em,itemsep=0.3em}
+
+\begin{document}
+
+% =================================================
+% SECTION 1: Title Page
+% =================================================
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+  % Modern geometric header background
+  \fill[codebg] (current page.south west) rectangle (current page.north east);
+  \fill[certiblue] (current page.north west) -- (current page.north east) -- ($(current page.north east)+(0,-4cm)$) -- ($(current page.north west)+(0,-6cm)$) -- cycle;
+  \fill[certidark] (current page.north west) -- ($(current page.north east)+(0,-4cm)$) -- ($(current page.north west)+(0,-5cm)$) -- cycle;
+  
+  % Subtle decorative circles
+  \fill[white, opacity=0.15] ($(current page.north east)+(-3cm,-1.5cm)$) circle (2.5cm);
+  \fill[white, opacity=0.08] ($(current page.north east)+(-1cm,-3cm)$) circle (5cm);
+  \fill[certiblue, opacity=0.03] ($(current page.south west)+(5cm,5cm)$) circle (8cm);
+\end{tikzpicture}
+
+\vspace*{5.5cm}
+\noindent
+{\Huge\sffamily\bfseries\color{certiblue} CertiGuard SDK}\\[0.5em]
+{\Large\sffamily\color{certidark} On-Premise Software License Protection}\\[1.5em]
+\noindent\rule{0.4\textwidth}{1.5pt}\\[1.5em]
+{\large\sffamily\color{certipurple}\textbf{Defense-in-Depth: A 10-Layer Architecture}}\\[0.5em]
+{\normalsize\sffamily\color{certigray}\textbf{Prevention $\cdot$ Detection $\cdot$ Forensics $\cdot$ Offline-First}}\\[1.5em]
+{\normalsize\sffamily\color{certigray}InnovIA ESI Hackathon --- April 2026}
+
+\vfill
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.08cm]
+  \foreach \i/\name/\c in {%
+    10/Audit Log \& Evidence Chain/certipurple,%
+    9/Watermarking \& Attribution/certipurple,%
+    8/Behavioral AI Detection/certigreen,%
+    7/Honeypot Tripwires/certigreen,%
+    6/PoW Dead Man's Switch/certigreen,%
+    5/Anti-Debug \& Anti-Tamper/certigreen,%
+    4/Challenge-Response Verifier/certiblue,%
+    3/Installation DNA \& Counter/certiblue,%
+    2/Hardware Fingerprint/certiblue,%
+    1/Ed25519 Signature Core/certiblue%
+  }{
+    \node[draw=\c, fill=white, rounded corners=3pt, minimum width=10.8cm, minimum height=0.75cm, anchor=north] (L\i) at (0,{-0.85*(10-\i)}) {\sffamily\textbf{L\i}: \name};
+  }
+\end{tikzpicture}
+\end{figure}
+
+\vfill
+\begin{center}
+{\small\sffamily\color{certigray}Software Architecture Design Document (SADD) --- IEEE-style technical format\par}
+\end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% =================================================
+% SECTION 2
+% =================================================
+\section{System Overview}
+
+\subsection{The Problem}
+On-premise software is frequently attacked through license-file editing, debugger-assisted binary patching, virtual-machine cloning, and usage abuse. Traditional single-check licensing fails because attackers need to bypass only one gate. CertiGuard addresses this with a layered architecture where cryptographic trust, host binding, runtime verification, behavioral detection, and forensic evidence are chained into one offline-first control plane.
+
+\subsection{Why Existing Solutions Fail}
+\begin{table}[H]
+\centering
+\caption{Limitations of common licensing approaches}
+\begin{tabularx}{\textwidth}{>{\bfseries}lY}
+\toprule
+Existing approach & Why it fails in practice \\
+\midrule
+Plain serial key check & Static key checks are patched by flipping a branch instruction in minutes. \\
+Online-only activation & Air-gapped or restricted enterprise networks cannot depend on real-time cloud checks. \\
+Simple hardware lock & Single-factor hardware binding is bypassed by VM snapshots or partial spoofing. \\
+Code obfuscation only & Obfuscation raises effort but does not provide cryptographic authenticity or evidence trail. \\
+Periodic polling license server & ``Kill server, keep app running'' attack remains possible without local heartbeat enforcement. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{CertiGuard's Approach}
+CertiGuard implements a defense-in-depth model: signed license authenticity (L1), machine/installation context continuity (L2--L3), verifier challenge integrity (L4), anti-analysis and liveness controls (L5--L6), tamper tripwires (L7), local anomaly scoring (L8), leak attribution (L9), and immutable audit chaining (L10). The system remains operational offline while preserving post-event forensic visibility for vendor review.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >=Latex,
+  server/.style={draw=certidark, fill=white, rounded corners, minimum width=3.2cm, minimum height=2.1cm, align=center},
+  shield/.style={draw=certiblue, fill=certiblue!20, minimum width=2.3cm, minimum height=2.3cm, regular polygon, regular polygon sides=6, align=center}
+]
+\node[server] (client) at (0,0) {Client Application\\\small Runtime + SDK};
+\node[server] (lic) at (6,0) {License\\\texttt{.certiguard}};
+\node[shield] (shield) at (3,-2.5) {\textbf{CertiGuard}\\Shield};
+
+\draw[->, very thick, certiblue] (lic.west) -- (client.east) node[midway, above, sloped] {\small verified flow};
+
+\node[text=certired] (a1) at (-3, 0.5) {\small File editing};
+\node[text=certired] (a2) at (-3, -0.5) {\small License copy};
+\node[text=certired] (a3) at (0, 2) {\small Debug attach};
+\node[text=certired] (a4) at (6, 2) {\small VM clone};
+\node[text=certired] (a5) at (9, 0) {\small Snapshot rollback};
+\node[text=certired] (a6) at (6, -4) {\small Over-usage};
+
+\draw[->, very thick, certired] (a1.east) -- (shield.west);
+\draw[->, very thick, certired] (a2.east) -- (shield.west);
+\draw[->, very thick, certired] (a3.south) -- (shield.north);
+\draw[->, very thick, certired] (a4.south) -- (shield.north);
+\draw[->, very thick, certired] (a5.west) -- (shield.east);
+\draw[->, very thick, certired] (a6.north) -- (shield.south);
+\end{tikzpicture}
+\caption{The attack surface and CertiGuard shielded runtime}
+\end{figure}
+
+% =================================================
+% SECTION 3
+% =================================================
+\section{Architecture Layers}
+
+\subsection{Layered Design Diagram}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Latex]
+\node[anchor=east, text=certiblue, font=\sffamily\bfseries] at (-0.55,8.05) {PREVENTION};
+\node[anchor=east, text=certigreen, font=\sffamily\bfseries] at (-0.55,4.45) {DETECTION};
+\node[anchor=east, text=certipurple, font=\sffamily\bfseries] at (-0.55,1.75) {FORENSICS};
+
+\foreach \idx/\name/\desc/\col in {%
+1/Ed25519 Signing/Core authenticity of license payload/certiblue,%
+2/Hardware Fingerprint/Bind license to host hardware profile/certiblue,%
+3/Installation DNA/Detect clone and rollback continuity breaks/certiblue,%
+4/Separate Verifier/Challenge-response integrity verification/certiblue,%
+5/Anti-Debug/Detect active runtime reverse engineering/certigreen,%
+6/Dead Man's Switch/PoW heartbeat chain enforces liveness/certigreen,%
+7/Honeypot Fields/Tripwire keys catch payload edits/certigreen,%
+8/Behavioral AI/Isolation Forest flags abusive patterns/certigreen,%
+9/Watermarking/Per-customer encoded attribution signal/certipurple,%
+10/Audit Hash Chain/Tamper-evident forensic event ledger/certipurple%
+}{
+  \pgfmathsetmacro{\y}{(10-\idx)*0.9}
+  \node[draw=\col, fill=\col!15, rounded corners=3pt, minimum width=13.0cm, minimum height=0.75cm, anchor=west] (bar\idx) at (0,\y) {};
+  \node[draw=\col, fill=\col, text=white, circle, minimum size=0.55cm, anchor=west] at (0.15,\y) {\sffamily\small\textbf{\idx}};
+  \node[anchor=west, text=certidark, align=left] at (0.90,\y) {\textbf{\name}\\[0.15em]\small\textcolor{certigray}{\desc}};
+}
+\end{tikzpicture}
+\caption{CertiGuard prevention--detection--forensics layer stack}
+\end{figure}
+
+\subsection{Complete Layer Catalogue}
+\begin{table}[H]
+\centering
+\caption{Layer model, threat focus, and offline suitability}
+\small
+\begin{tabularx}{\textwidth}{c l Y Y c}
+\toprule
+\textbf{Layer} & \textbf{Name} & \textbf{Threat Stopped} & \textbf{Algorithm/Method} & \textbf{Offline?} \\
+\midrule
+L1 & Ed25519 Signing & File tampering, forgery & EdDSA on Curve25519 & YES \\
+L2 & Hardware Fingerprint & License copying & SHA-256 + CPU/Board & YES \\
+L3 & Installation DNA & VM cloning, snapshots & UUID + Timestamp + Counter & YES \\
+L4 & Separate Verifier & Binary patching & Challenge-response HMAC & YES \\
+L5 & Anti-Debug & Debugger analysis & IsDebuggerPresent + timing + ptrace & YES \\
+L6 & Dead Man's Switch & Process killing & PoW heartbeat chain & YES \\
+L7 & Honeypot Fields & License editing & Tripwire fields in payload & YES \\
+L8 & Behavioral AI & Over-usage, sharing & Isolation Forest (sklearn) & YES \\
+L9 & Watermarking & Leak tracing & Per-customer encoding & YES \\
+L10 & Audit Log & Evidence destruction & SHA-256 hash chain & YES \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{tcolorbox}[certicallout,title=\textbf{Design Principle}]
+No single layer is trusted as a sole control. Runtime acceptance requires a sequence of independent controls whose outputs are both \emph{decision signals} and \emph{forensic events}.
+\end{tcolorbox}
+
+% =================================================
+% SECTION 4
+% =================================================
+\section{Data Flow Diagram}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  >=Latex,
+  box/.style={draw=certidark, rounded corners=2pt, fill=white, minimum width=3.2cm, minimum height=0.7cm, align=center},
+  proc/.style={draw=certiblue, rounded corners=2pt, fill=certiblue!12, minimum width=3.5cm, minimum height=0.72cm, align=center},
+  side/.style={draw=certigray, rounded corners=2pt, fill=certigray!12, minimum width=3.5cm, minimum height=0.72cm, align=center},
+  arr/.style={->, thick, certidark}
+]
+
+% Simplified layout without backgrounds to reduce TikZ complexity
+\node[anchor=north, text=certiblue, font=\bfseries] at (-3,4.6) {VENDOR SIDE};
+\node[anchor=north, text=certigray, font=\bfseries] at (3,4.6) {CLIENT SIDE};
+
+\node[box] (k) at (-3,3.5) {Private Key};
+\node[proc] (lc) at (-3,2.3) {License Creator};
+\node[box] (licv) at (-3,1.1) {\texttt{.certiguard} file};
+\draw[arr] (k) -- (lc);
+\draw[arr] (lc) -- (licv);
+
+\draw[->, very thick, certiblue] (-1,1.1) -- (1,1.1) node[midway, above, text=certidark] {\small USB / Email / Portal};
+
+\node[side] (licc) at (3,3.5) {\texttt{.certiguard} file};
+\node[side] (l1) at (3,2.3) {Layer 1: Verify Signature};
+\node[side] (l2) at (3,1.1) {Layer 2: Check Hardware};
+\node[side] (l3) at (3,-0.1) {Layer 3: Check DNA};
+\node[side] (l4) at (3,-1.3) {Layer 4: Challenge-Response};
+\node[side] (l5) at (3,-2.5) {Layer 5: Anti-Debug Check};
+\node[draw=certigreen, fill=certigreen!15, rounded corners=2pt, minimum width=3.5cm, minimum height=0.72cm, align=center] (run) at (3,-3.7) {Software Runs};
+
+\draw[arr] (licc) -- (l1);
+\draw[arr] (l1) -- (l2);
+\draw[arr] (l2) -- (l3);
+\draw[arr] (l3) -- (l4);
+\draw[arr] (l4) -- (l5);
+\draw[arr] (l5) -- (run);
+
+\node[draw=certigreen, fill=certigreen!10, rounded corners=2pt, minimum width=3.5cm, minimum height=0.72cm, align=center] (dms) at (7,-0.1) {Background: L6 DMS};
+\node[draw=certigreen, fill=certigreen!10, rounded corners=2pt, minimum width=3.5cm, minimum height=0.72cm, align=center] (ai) at (7,-1.3) {Background: L8 AI};
+\node[draw=certipurple, fill=certipurple!12, rounded corners=2pt, minimum width=3.5cm, minimum height=0.72cm, align=center] (audit) at (7,-2.5) {Layer 10 Audit Log};
+\node[draw=certiblue, fill=certiblue!12, rounded corners=2pt, minimum width=3.5cm, minimum height=0.72cm, align=center] (renewal) at (7,-3.7) {Vendor at Renewal};
+
+\draw[->, thick, certigreen] (l4.east) -- +(0.5,0) |- (dms.west);
+\draw[->, thick, certigreen] (dms) -- (ai);
+\draw[->, thick, certipurple] (ai) -- (audit);
+\draw[->, thick, certiblue] (audit) -- (renewal);
+\end{tikzpicture}
+\caption{End-to-end vendor-to-client data and control flow}
+\end{figure}
+
+% =================================================
+% SECTION 5
+% =================================================
+\section{Ed25519 Cryptographic Core}
+
+\subsection{Mathematical Foundation}
+CertiGuard's trust anchor is vendor-side Ed25519 signing. The client validates signatures using only the public key.
+
+\begin{align*}
+\text{Private key:}\quad & d = \texttt{random\_bytes}(32) \\
+\text{Public key:}\quad & Q = d \cdot G \\
+\text{Signature:}\quad & \sigma = (R,S), \quad S = (r + k\cdot d)\bmod L \\
+\text{Verification:}\quad & S\cdot G = R + k\cdot Q
+\end{align*}
+
+\begin{tcolorbox}[certicallout,title=\textbf{Security Implication}]
+Without the vendor private key $d$, a valid signature over a modified license payload is computationally infeasible under standard Ed25519 assumptions.
+\end{tcolorbox}
+
+\subsection{Why This Beats Denuvo-Style Decrypt-at-Runtime Patterns}
+\begin{table}[H]
+\centering
+\caption{Comparison: code decryption DRM vs signed-parameter architecture}
+\begin{tabularx}{\textwidth}{>{\bfseries}lYY}
+\toprule
+Property & Denuvo DRM & CertiGuard \\
+\midrule
+What's protected & Game executable code & License parameters and policy payload \\
+Secret in RAM? & YES --- decryption key material is transiently present & NO --- private key remains vendor-side only \\
+Dump attack? & Possible via runtime memory dump during decrypt path & Not applicable; no private signing key in client runtime \\
+Status & Historically cracked in multiple titles & Signature forgery remains mathematically infeasible \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{License File Structure}
+\begin{lstlisting}[language=,caption={Conceptual signed license payload (all fields covered by signature)}]
+{
+  "version": "3.0",
+  "license_id": "LIC-20260425025054",
+  "issued_to": "Customer A",
+  "issued_at": "2026-04-25T02:50:54Z",
+  "valid_until": "2027-04-25T02:50:54Z",
+  "hardware_fingerprint": "sha256(...)",
+  "install_dna": {
+    "install_id": "uuid-v4",
+    "first_boot": "2026-04-01T10:00:00Z",
+    "boot_count_at_issue": 37
+  },
+  "parameters": {
+    "max_users": 50,
+    "modules": ["core", "analytics"]
+  },
+  "tpm": {
+    "available": true,
+    "anchor": "optional-tpm-anchor"
+  },
+  "watermark": "customer-bound-short-hash",
+  "tripwires": {
+    "premium_unlock": false,
+    "admin_override": false
+  }
+}
+\end{lstlisting}
+
+% =================================================
+% SECTION 6
+% =================================================
+\section{Installation DNA --- Anti-Cloning}
+
+\subsection{The VM Cloning Problem}
+A cloned VM can preserve application files, including the license file, but cannot preserve all runtime continuity signals simultaneously. CertiGuard combines machine-bound encryption context, first-boot chronology, and monotonic counters to make state replay and snapshot rollback observable.
+
+\subsection{Three DNA Components}
+% Replaced complex TikZ with standard table to reduce compile time
+\begin{table}[H]
+\centering
+\caption{DNA continuity checks under VM clone/snapshot conditions}
+\begin{tabularx}{\textwidth}{lXX>{\bfseries\color{certired}}c}
+\toprule
+\textbf{Component} & \textbf{Original VM} & \textbf{Clone after snapshot} & \textbf{Result} \\
+\midrule
+UUID & \texttt{a3f9...} & Cannot decrypt (wrong HW) & REJECTED \\
+First-Boot & 2026-04-01 & 2026-04-15 (new boot) & MISMATCH \\
+Boot Counter & 150 & 100 (went backward) & REJECTED \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Why All Three Cannot Be Cloned Simultaneously}
+A successful clone attack would require simultaneously reproducing (i) hardware-derived cryptographic context, (ii) installation timeline consistency, and (iii) monotonic counter progression. In practical enterprise environments, attackers can imitate one or two signals, but not all three without triggering at least one mismatch event and corresponding forensic evidence.
+
+% =================================================
+% SECTION 7
+% =================================================
+\section{AI Behavioral Detection}
+
+\subsection{Isolation Forest --- How It Works}
+Isolation Forest isolates anomalous points using random partition trees; observations requiring fewer splits are more likely to be outliers. CertiGuard applies this locally on runtime usage features and persists baseline statistics to support offline enforcement.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.95\textwidth,
+  height=6.2cm,
+  xlabel={Anomaly Score},
+  ylabel={Session Count},
+  xmin=-0.6, xmax=0.2,
+  ymin=0, ymax=22,
+  grid=major,
+  grid style={gray!20},
+  legend style={at={(0.98,0.98)}, anchor=north east, font=\small},
+  ybar=0pt,
+  bar width=8pt
+]
+
+% Normal sessions (green)
+\addplot+[ybar, fill=certigreen!60, draw=certigreen] coordinates {
+(-0.24,3) (-0.20,6) (-0.16,10) (-0.12,15) (-0.08,19) (-0.04,16) (0.00,11) (0.04,6)
+};
+\addlegendentry{Normal sessions}
+
+% Fraud sessions (red)
+\addplot+[ybar, fill=certired!60, draw=certired] coordinates {
+(-0.56,2) (-0.52,4) (-0.48,9) (-0.44,14) (-0.40,12) (-0.36,8) (-0.32,4)
+};
+\addlegendentry{Fraudulent sessions}
+
+% Threshold line
+\addplot[certidark, dashed, very thick, domain=0:22] coordinates {(-0.3,0) (-0.3,22)};
+\addlegendentry{Threshold = -0.3}
+\end{axis}
+\end{tikzpicture}
+\caption{Distribution of anomaly scores with enforcement threshold}
+\end{figure}
+
+\subsection{Feature Table}
+\begin{table}[H]
+\centering
+\caption{Behavioral features used for local anomaly scoring}
+\begin{tabularx}{\textwidth}{>{\bfseries}lYY}
+\toprule
+Name & Normal Range & Fraud Indicator \\
+\midrule
+Active users & 5--60 & Sudden spikes beyond licensed capacity \\
+Hour-of-day pattern & Business-hour dominant & High activity at abnormal hours \\
+Unique machines (24h) & Stable tenant profile & Sharp fan-out across many hosts \\
+API calls/minute & Predictable envelope & Burst amplification and scripted cadence \\
+CPU percent & 10--75\% & Sustained high load from automation loops \\
+Memory percent & 20--80\% & Unusual sustained pressure with license abuse \\
+Process count & Environment baseline & Abrupt tooling/process injection patterns \\
+GPU/discrete hint & Stable hardware signature & Unexpected hardware class shifts \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Offline-First Design}
+Enforcement path: local detection $\rightarrow$ audit hash chain $\rightarrow$ vendor review at renewal/sync. No continuous cloud dependency is required; evidence accumulates locally and can be synchronized opportunistically.
+
+% =================================================
+% SECTION 8
+% =================================================
+\section{Complete Attack-Defense Matrix}
+
+\begin{table}[H]
+\centering
+\caption{Attack-to-layer mapping across 14 scenarios}
+\small
+\begin{tabularx}{\textwidth}{c Y c Y Y}
+\toprule
+\textbf{ID} & \textbf{Attack Description} & \textbf{Layer} & \textbf{Detection Method} & \textbf{Result} \\
+\midrule
+\rowcolor{attackblue}
+A1 & Edit signed field in license payload & L1 & Ed25519 signature verification fails & Rejected \\
+\rowcolor{attackblue}
+A2 & Replace \texttt{valid\_until} with future date & L1 & Signature mismatch on modified payload & Rejected \\
+\rowcolor{attackgreen}
+A3 & Copy license to a different machine & L2 & Hardware fingerprint mismatch & Rejected \\
+\rowcolor{attackgreen}
+A4 & Clone VM image to another host & L2/L3 & HW mismatch + DNA continuity break & Rejected \\
+\rowcolor{attackgreen}
+A5 & Snapshot rollback to older state & L3 & Monotonic counter regression & Rejected \\
+\rowcolor{attackorange}
+A6 & Patch executable branch around verify & L4 & Challenge-response integrity fails & Rejected \\
+\rowcolor{attackorange}
+A7 & Swap verifier response blob & L4 & HMAC challenge mismatch & Rejected \\
+\rowcolor{attackred}
+A8 & Attach debugger to runtime process & L5 & Anti-debug detectors + timing heuristics & Blocked / flagged \\
+\rowcolor{attackred}
+A9 & Single-step runtime to extract logic & L5 & Timing anomaly and debugger flags & Blocked / flagged \\
+\rowcolor{attackpurple}
+A10 & Kill watchdog/liveness process repeatedly & L6 & PoW heartbeat stale/chain invalid & Restricted mode \\
+\rowcolor{attackblue}
+A11 & Add \texttt{PREMIUM\_UNLOCK=true} in payload & L7 & Honeypot tripwire before full verify & Rejected \\
+\rowcolor{attackpurple}
+A12 & Share one license across many teams & L8 & Isolation Forest anomaly score crossing threshold & Flagged / blocked \\
+\rowcolor{attackpurple}
+A13 & Leak customer license on forums & L9 & Per-customer watermark attribution & Traceable source \\
+\rowcolor{attackred}
+A14 & Delete/modify audit evidence rows & L10 & Hash-chain verification failure & Tamper alert \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =================================================
+% SECTION 9
+% =================================================
+\section{SDK Integration}
+
+\subsection{Minimal Integration Snippet}
+\begin{lstlisting}[language=Python,caption={Three-line host application integration}]
+from certiguard.license_client import CertiGuardClient
+result = CertiGuardClient(state_dir).verify_runtime(license_path=lic, public_key_path=pub, heartbeat_key=key, behavior_features=features)
+assert result.ok, result.code
+\end{lstlisting}
+
+\subsection{Component Layout}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.8cm and 1.2cm,
+  box/.style={draw=certidark, rounded corners, fill=white, minimum width=3.6cm, minimum height=0.9cm, align=center},
+  arr/.style={->, thick, certidark}
+]
+\node[box] (cli) {\texttt{cli.py}\\Command surface};
+\node[box, right=of cli] (client) {\texttt{license\_client.py}\\Runtime orchestrator};
+\node[box, below=of client] (layers) {\texttt{layers/*}\\Core controls L1--L10};
+\node[box, right=of client] (dash) {\texttt{dashboard.py}\\Admin API + UI host};
+\node[box, below=of dash] (ui) {\texttt{ui/}\\Overview, Logs, Risk};
+
+\draw[arr] (cli) -- (client);
+\draw[arr] (client) -- (layers);
+\draw[arr] (layers.east) -- ++(0.5,0) |- (dash.south);
+\draw[arr] (dash) -- (ui);
+\end{tikzpicture}
+\caption{CertiGuard SDK component interaction view}
+\end{figure}
+
+\subsection{Deployment Scenarios}
+\begin{table}[H]
+\centering
+\caption{Deployment modes}
+\begin{tabularx}{\textwidth}{>{\bfseries}lYc}
+\toprule
+Scenario & Active Layers & Internet Required \\
+\midrule
+Air-gapped & L1--L10 (no external online ping dependency) & NO \\
+Standard enterprise & All layers + optional sync at renewal & NO \\
+Trial copy & L1 + L7 (lightweight policy mode) & NO \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =================================================
+% SECTION 10
+% =================================================
+\section{References}
+
+\begin{enumerate}[label={[\arabic*]}]
+\item D. J. Bernstein, N. Duif, T. Lange, P. Schwabe, and B.-Y. Yang, ``High-speed high-security signatures,'' \emph{Journal of Cryptographic Engineering}, 2011.
+\item IETF, ``RFC 8032: Edwards-Curve Digital Signature Algorithm (EdDSA),'' 2017.
+\item J. Brendel, C. Cremers, and D. Jackson, ``A formal treatment of Ed25519 signature security,'' in \emph{IEEE Symposium on Security and Privacy}, 2021.
+\item F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation Forest,'' in \emph{IEEE International Conference on Data Mining (ICDM)}, 2008.
+\item B. De Sutter, A. Slowinska, and S. Schrittwieser, ``Software protection methodologies: State of the art and open challenges,'' \emph{ACM Computing Surveys}, 2024.
+\item S. Chow, P. A. Eisen, H. Johnson, and P. C. van Oorschot, ``White-box cryptography and implementation attacks,'' in \emph{SAC}, 2002.
+\item National Security Agency, ``Trusted Platform Module (TPM) Use Cases and Deployment Guidance,'' Technical Report, 2024.
+\item S. Nakamoto, ``Bitcoin: A Peer-to-Peer Electronic Cash System,'' 2008.
+\end{enumerate}
+
+\begin{tcolorbox}[certicallout,title=\textbf{Final Note}]
+This architecture is intentionally offline-first: it prioritizes local enforceability, cryptographic authenticity, and forensic continuity while still enabling periodic vendor-side review through synchronized or transferred audit evidence.
+\end{tcolorbox}
+
+\end{document}

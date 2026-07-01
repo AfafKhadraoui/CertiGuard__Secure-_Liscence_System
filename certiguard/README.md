@@ -1,164 +1,105 @@
-# CertiGuard SDK (Offline-First On-Premise License Protection)
+# CertiGuard SDK
 
-CertiGuard is a Python SDK prototype for protecting on-premise software licenses against tampering, cloning, replay, and over-usage abuse.
+CertiGuard is an offline-first SDK for on-premise software license protection. It combines cryptographic trust, host binding, runtime challenge checks, anti-debug/liveness controls, anomaly detection, and tamper-evident forensics.
 
-## What this implementation includes
+## Quick Links
 
-- Layer 1: Ed25519 license signing and verification
-- Layer 2: Stable hardware fingerprint (CPU + motherboard)
-- Layer 3: Installation DNA and monotonic boot counter with HMAC integrity
-- Layer 4: Challenge-response verification model
-- Layer 5: Anti-debug checks + heartbeat/dead-man-switch primitives
-- Layer 6: Offline behavioral anomaly detection with Isolation Forest
-- Optional premium tier: TPM anchor binding when TPM is available
-- Build-time dynamic noise generator for per-build polymorphic native verifier wrappers
-- Hash-chained local audit log for forensic review at renewal
+- Test/run guide: [`docs/HOW_TO_TEST.md`](docs/HOW_TO_TEST.md)
+- Demo script and narrative: [`docs/DEMO_TEST_METHODOLOGY.md`](docs/DEMO_TEST_METHODOLOGY.md)
+- Full layer map (implementation truth): [`docs/LAYERS.md`](docs/LAYERS.md)
+- Architecture summary: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- Obfuscation/noise guide: [`docs/obfuscation_guide.md`](docs/obfuscation_guide.md)
+- Docs index: [`docs/README.md`](docs/README.md)
 
-## Project layout
+## What CertiGuard Provides
 
-- `src/certiguard/layers/crypto_core.py`: key generation, signing, verification
-- `src/certiguard/layers/hardware.py`: hardware fingerprint collection
-- `src/certiguard/layers/dna.py`: install UUID + first-boot DNA
-- `src/certiguard/layers/counter.py`: monotonic counter with MAC
-- `src/certiguard/layers/verifier.py`: challenge-response verification pipeline
-- `src/certiguard/layers/antidebug.py`: debugger/process detection checks
-- `src/certiguard/layers/watchdog.py`: heartbeat and DMS validation helpers
-- `src/certiguard/layers/anomaly.py`: local Isolation Forest model
-- `src/certiguard/layers/audit.py`: tamper-evident audit chain
-- `src/certiguard/client.py`: client runtime orchestration
-- `src/certiguard/issuer.py`: vendor-side license issuance
-- `src/certiguard/cli.py`: command line entrypoint
+- `L1` Ed25519 license signing and verification
+- `L2` hardware fingerprint + optional TPM anchor checks
+- `L3` installation DNA and anti-rollback counter
+- `L4` challenge-response verifier flow (with IPC path where supported)
+- `L5` anti-debug + heartbeat recency checks
+- `L6` local behavioral anomaly and drift scoring
+- `L7` honeypot payload tripwires
+- `L9` per-customer watermarking
+- `L10` hash-chained audit log + optional dashboard ingest sync
 
-## Quick start
+## Repository Structure
 
-```bash
-cd certiguard
+| Path | Purpose |
+|------|---------|
+| `src/certiguard/` | SDK source (`cli.py`, `license_client.py`, `dashboard.py`, `layers/*`) |
+| `src/certiguard/ui/` | Vendor dashboard UI (Vite + React) |
+| `tests/` | Automated tests |
+| `examples/` | E2E harness + demo app scripts |
+| `scripts/` | Utility scripts (e.g. smoke dashboard launcher) |
+| `docs/` | Canonical docs only |
+| `artifacts/noise_samples/` | Optional generated noise examples |
+| `demo_runs/` | Ephemeral local demo output |
+
+## Setup
+
+From `certiguard/`:
+
+```powershell
 python -m venv .venv
-. .venv/Scripts/activate  # Windows PowerShell: .\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 pip install -e .
 ```
 
-### 1) Generate vendor keys
-
-```bash
-certiguard gen-keys --private-key keys/vendor_private.pem --public-key keys/vendor_public.pem
-```
-
-### 2) Generate client registration request (.cgreq-like JSON)
-
-```bash
-certiguard gen-request --state-dir runtime/clientA --out runtime/clientA/clientA.cgreq.json
-```
-
-### 3) Issue a signed license (vendor side)
-
-```bash
-certiguard issue-license \
-  --request runtime/clientA/clientA.cgreq.json \
-  --private-key keys/vendor_private.pem \
-  --out runtime/clientA/license.certiguard.json \
-  --issued-to ACME \
-  --max-users 50 \
-  --modules invoicing,hr,reporting \
-  --valid-days 365 \
-  --exe-hash deadbeef
-```
-
-### If your last successful command was `gen-request`
-
-Run exactly these commands in PowerShell from the `certiguard` folder:
+Build the dashboard UI once:
 
 ```powershell
-certiguard gen-keys --private-key keys/vendor_private.pem --public-key keys/vendor_public.pem
-certiguard issue-license --request runtime/clientA/clientA.cgreq.json --private-key keys/vendor_private.pem --out runtime/clientA/license.certiguard.json --issued-to ACME --max-users 50 --modules invoicing,hr,reporting --valid-days 365 --exe-hash deadbeef
-certiguard verify --state-dir runtime/clientA --license runtime/clientA/license.certiguard.json --public-key keys/vendor_public.pem --heartbeat-key local-shared-secret --features 30,10,3,45
+cd src\certiguard\ui
+npm install
+npm run build
+cd ..\..\..
 ```
 
-Expected output:
+## Fast End-to-End Demo
 
-- `Keys generated`
-- `License issued: runtime/clientA/license.certiguard.json`
-- JSON result with `"ok": true` and `"code": "OK"` (unless policy/tamper checks fail)
+Terminal 1 (dashboard):
 
-### 4) Verify at runtime (client side)
-
-```bash
-certiguard verify \
-  --state-dir runtime/clientA \
-  --license runtime/clientA/license.certiguard.json \
-  --public-key keys/vendor_public.pem \
-  --heartbeat-key local-shared-secret \
-  --features 30,10,3,45 \
-  --require-tpm-if-present
+```powershell
+cd c:\path\to\nothingggg_us\certiguard
+.\.venv\Scripts\Activate.ps1
+$env:PYTHONPATH = "src"
+python -m certiguard.cli dashboard --audit-log "c:\path\to\nothingggg_us\certiguard\demo_runs\cg_e2e\client_state\audit.log" --port 8080
 ```
 
-### 5) Export renewal package for offline transfer
+Terminal 2 (harness):
 
-```bash
-certiguard renewal-export --state-dir runtime/clientA --out runtime/clientA/renewal_request.json
+```powershell
+cd c:\path\to\nothingggg_us\certiguard
+.\.venv\Scripts\Activate.ps1
+$env:PYTHONPATH = "src"
+python examples\cg_e2e_app\run_harness.py setup --clean
+python examples\cg_e2e_app\run_harness.py verify-ok
+python examples\cg_e2e_app\run_harness.py synthetic-audit
 ```
 
-### 6) Generate per-build dynamic noise code (for native verifier build)
+Open `http://localhost:8080`.
 
-```bash
-certiguard generate-noise --seed 20260424 --out build/certiguard_dynamic_noise.h --lines 40
+## Tests
+
+```powershell
+cd c:\path\to\nothingggg_us\certiguard
+$env:PYTHONPATH = "src"
+pytest tests\ -q
 ```
 
-## Agile Security delivery model
+## Main CLI Commands
 
-Use short security sprints (1-2 weeks) and ship by layer:
+- `certiguard gen-keys`
+- `certiguard gen-request`
+- `certiguard issue-license`
+- `certiguard verify`
+- `certiguard run`
+- `certiguard renewal-export`
+- `certiguard dashboard`
+- `certiguard sync-audit`
+- `certiguard init-policy`
+- `certiguard create-manifest` / `verify-manifest`
+- `certiguard generate-noise`
 
-- Sprint 1: L1-L2 baseline (signature + hardware binding)
-- Sprint 2: L3 anti-clone DNA/counter and regression tests
-- Sprint 3: L4 challenge-response + verifier hardening
-- Sprint 4: L5 anti-debug + heartbeat watchdog + incident runbooks
-- Sprint 5: L6 anomaly baseline and forensic dashboard schema
-- Sprint 6: Hardening backlog (HSM, watermarking, honeypots, federated model refresh)
-
-Each sprint should include:
-
-- Threat stories (abuse-case driven)
-- Security acceptance criteria
-- Automated tests and attack simulation checks
-- Documentation updates and operational playbooks
-
-## Implementation status (current)
-
-Implemented now:
-
-- L1-L2 baseline: Ed25519 signing, HW fingerprint, optional TPM anchor binding
-- L3 anti-clone DNA/counter: UUID + first-boot hash + HMAC counter, now with AES-GCM storage
-- L4 challenge-response verifier functions
-- L5 anti-debug checks + heartbeat primitives + watchdog supervisor helper
-- L6 anomaly scoring + persisted customer baseline + drift detection
-- Signed update manifest commands
-- Executable hash grace-window enforcement logic
-- Renewal export with optional customer-side signature
-- Dynamic per-build noise generation command
-- Abuse simulation tests (tamper, expiry, counter rollback)
-
-Partially implemented:
-
-- Separate verifier as truly isolated service/process with hardened signed IPC
-- Kill-on-silence full enforcement (currently supervisor helper + policy flow)
-- Vendor reissue automation for update grace windows
-- Forensic dashboard/UI schema integration
-
-Not implemented yet:
-
-- HSM-backed signing key custody
-- Attested TPM AK/EK challenge flow (current TPM anchor is metadata-rooted)
-- SGX/TrustZone enclave integration
-- Obfuscated packaged verifier binary pipeline (PyArmor/LLVM pass pipeline)
-- Formal SIEM connector and red-team automation framework
-
-## Important limitations
-
-This is a production-oriented prototype and not a complete commercial DRM system yet.  
-You should still add HSM-backed signing, stronger OS-specific hardening, secure IPC, and a packaged verifier binary before production release.
-
-Hardware note:
-
-- TPM provides hardware-rooted identity signals.
-- SGX/TrustZone provide stronger isolation for sensitive logic, but should still be treated as high-assurance controls, not a blanket absolute guarantee.
+Use `certiguard --help` for all flags.
 

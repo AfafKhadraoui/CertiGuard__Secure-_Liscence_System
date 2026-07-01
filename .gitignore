@@ -57,3 +57,6 @@ certiguard/keys/
 **/counter.json
 **/dna.json
 
+# Node modules for the UI dashboard
+node_modules/
+dist-tsc/

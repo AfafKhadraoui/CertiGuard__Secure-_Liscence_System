@@ -1,58 +1,62 @@
-from __future__ import annotations
+"""
+Layer 1b — Hardware Fingerprinting (Cross-Platform)
+--------------------------------------------------
+Collects unique, non-changing hardware identifiers for DNA binding.
+Supports Windows, Linux, and macOS.
+"""
 
-import hashlib
-import platform
 import subprocess
-from pathlib import Path
+import platform
+import hashlib
+import os
 
-
-VENDOR_SALT = "certiguard_2026_your_secret"
-
-def _validate_component(name: str, value: str) -> str:
-    invalid_values = {"unknown", "unknown-cpu", "unknown-board", "to be filled by o.e.m.", "none", "default string", ""}
-    if value.lower() in invalid_values:
-        raise RuntimeError(f"Cannot collect hardware info for {name} — run as administrator or unsupported hardware")
-    return value
-def _safe_command(command: list[str]) -> str:
+def get_machine_uuid() -> str:
+    """Gets the unique hardware UUID of the motherboard/system."""
+    system = platform.system()
+    
     try:
-        output = subprocess.check_output(command, stderr=subprocess.DEVNULL, text=True).strip()
-        return output or "unknown"
+        if system == "Windows":
+            # Windows: WMI unique ID
+            cmd = "wmic csproduct get uuid"
+            return subprocess.check_output(cmd, shell=True).decode().splitlines()[1].strip()
+            
+        elif system == "Linux":
+            # Linux: DMI Product UUID (Requires root for some, fallback to machine-id)
+            if os.path.exists("/sys/class/dmi/id/product_uuid"):
+                with open("/sys/class/dmi/id/product_uuid", "r") as f:
+                    return f.read().strip()
+            if os.path.exists("/etc/machine-id"):
+                with open("/etc/machine-id", "r") as f:
+                    return f.read().strip()
+                    
+        elif system == "Darwin": # macOS
+            # macOS: IOPlatformUUID
+            cmd = "ioreg -rd1 -c IOPlatformExpertDevice | grep IOPlatformUUID"
+            out = subprocess.check_output(cmd, shell=True).decode()
+            return out.split('=')[-1].replace('"', '').strip()
+            
     except Exception:
-        return "unknown"
+        pass
+        
+    return "GENERIC-HARDWARE-ID"
 
+def get_cpu_info() -> str:
+    """Gets the CPU model and feature set as part of the DNA."""
+    return platform.processor() or "UNKNOWN-CPU"
 
-def cpu_id() -> str:
-    val = "unknown-cpu"
-    if platform.system() == "Windows":
-        out = _safe_command(["wmic", "cpu", "get", "ProcessorId"])
-        lines = [line.strip() for line in out.splitlines() if line.strip() and "ProcessorId" not in line]
-        val = lines[0] if lines else platform.processor() or "unknown-cpu"
-    else:
-        cpuinfo = Path("/proc/cpuinfo")
-        if cpuinfo.exists():
-            for line in cpuinfo.read_text(encoding="utf-8", errors="ignore").splitlines():
-                if line.lower().startswith("model name"):
-                    val = line.split(":", 1)[1].strip()
-                    break
-        if val == "unknown-cpu":
-            val = platform.processor() or "unknown-cpu"
-    return _validate_component("CPU", val)
+def generate_hardware_fingerprint() -> str:
+    """
+    Mixes multiple hardware IDs into a single SHA-256 fingerprint.
+    This fingerprint is used as the 'Seed' for all encryption.
+    """
+    uuid = get_machine_uuid()
+    cpu = get_cpu_info()
+    node = platform.node() # Machine name
+    
+    raw_data = f"{uuid}-{cpu}-{node}"
+    return hashlib.sha256(raw_data.encode("utf-8")).hexdigest()
 
-
-def board_serial() -> str:
-    val = "unknown-board"
-    if platform.system() == "Windows":
-        out = _safe_command(["wmic", "baseboard", "get", "serialnumber"])
-        lines = [line.strip() for line in out.splitlines() if line.strip() and "SerialNumber" not in line]
-        val = lines[0] if lines else "unknown-board"
-    else:
-        serial_file = Path("/sys/class/dmi/id/board_serial")
-        if serial_file.exists():
-            val = serial_file.read_text(encoding="utf-8", errors="ignore").strip() or "unknown-board"
-    return _validate_component("Motherboard", val)
-
-
-def hardware_fingerprint() -> str:
-    data = f"{cpu_id()}|{board_serial()}|{VENDOR_SALT}".encode("utf-8")
-    return hashlib.sha256(data).hexdigest()
-
+if __name__ == "__main__":
+    print(f"OS: {platform.system()}")
+    print(f"Machine UUID: {get_machine_uuid()}")
+    print(f"Final DNA Fingerprint: {generate_hardware_fingerprint()}")

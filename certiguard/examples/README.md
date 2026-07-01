@@ -1,4 +1,11 @@
-# Example workflow
+# Examples
+
+| Path | Purpose |
+|------|---------|
+| [`cg_e2e_app/run_harness.py`](cg_e2e_app/run_harness.py) | End-to-end harness: keys, license, `verify_runtime`, L6 warm/stress, attack simulators, synthetic audit lines. |
+| [`demo_host_app.py`](demo_host_app.py) | Small “host app” driver (`ping`, `warm`, `stress`) for demos. |
+
+## CLI workflow (manual keys)
 
 ```bash
 certiguard gen-keys --private-key keys/private.pem --public-key keys/public.pem
@@ -8,3 +15,6 @@ certiguard verify --state-dir runtime/clientA --license runtime/clientA/license.
 certiguard renewal-export --state-dir runtime/clientA --out runtime/clientA/renewal_request.json
 ```
 
+## Documentation
+
+- Runbook and dashboard: [`../docs/HOW_TO_TEST.md`](../docs/HOW_TO_TEST.md), [`../docs/DEMO_TEST_METHODOLOGY.md`](../docs/DEMO_TEST_METHODOLOGY.md)
