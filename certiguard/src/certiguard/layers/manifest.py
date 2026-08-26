@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,7 +21,8 @@ def create_signed_manifest(
         "generated_at": datetime.now(UTC).isoformat(),
         "files": files,
     }
-    signed = {**payload, "signature": sign_payload(payload, load_private_key(private_key_path))}
+    signed_bytes = sign_payload(payload, load_private_key(private_key_path))
+    signed = {**payload, "signature": base64.b64encode(signed_bytes).decode("ascii")}
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(signed, indent=2), encoding="utf-8")
     return signed
@@ -28,7 +30,8 @@ def create_signed_manifest(
 
 def verify_signed_manifest(manifest_path: Path, public_key_path: Path) -> bool:
     data = json.loads(manifest_path.read_text(encoding="utf-8"))
-    signature = data["signature"]
+    signed_bytes = base64.b64decode(data["signature"])
     payload = {k: v for k, v in data.items() if k != "signature"}
-    return verify_payload(payload, signature, load_public_key(public_key_path))
+    verified_payload = json.loads(verify_payload(signed_bytes, load_public_key(public_key_path)).decode("utf-8"))
+    return verified_payload == payload
 
