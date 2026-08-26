@@ -1,11 +1,11 @@
 # CertiGuard — Complete implementation reference (slide & audit source)
 
-**Purpose of this document:** Single source of truth for **what is implemented** in `nothingggg_us/certiguard/`, mapped to security layers, CLI, APIs, tests, and **slide-deck structure**. Copy sections verbatim into presentations; tables are designed for one-slide-per-block export.
+**Purpose of this document:** Single source of truth for **what is implemented** in `certiguard/`, mapped to security layers, CLI, APIs, tests, and **slide-deck structure**. Copy sections verbatim into presentations; tables are designed for one-slide-per-block export.
 
 **Audience:** Engineering, product, judges, internal audits.
 
-**Canonical code root:** `nothingggg_us/certiguard/src/certiguard/`  
-**Hackathon narrative / pseudo-code:** [`nothingggg_us/docs/CertiGuard_Final_Implementation.md`](../../docs/CertiGuard_Final_Implementation.md)  
+**Canonical code root:** `certiguard/src/certiguard/`  
+**Hackathon narrative / pseudo-code:** [`docs/CertiGuard_Final_Implementation.md`](../../docs/CertiGuard_Final_Implementation.md)  
 **Demo runbook:** [`DEMO_TEST_METHODOLOGY.md`](./DEMO_TEST_METHODOLOGY.md)  
 **Hands-on testing (harness + dashboard):** [`HOW_TO_TEST.md`](./HOW_TO_TEST.md)
 
@@ -53,7 +53,7 @@ CertiGuard is an **offline-first** Python SDK for **on-premise** license protect
 
 ---
 
-## Repository layout (`nothingggg_us/certiguard/`)
+## Repository layout (`certiguard/`)
 
 ```
 certiguard/
@@ -486,7 +486,7 @@ Renewal export embeds full `audit.log` text for vendor review.
 
 ## Testing — run everything (copy-paste)
 
-From `nothingggg_us/certiguard/`:
+From `certiguard/`:
 
 ```powershell
 python -m venv .venv
@@ -542,7 +542,7 @@ All **`pytest tests/`** cases + standalone scripts above should **pass** on a he
 |----------|------|
 | This reference | `certiguard/docs/LAYERS.md` |
 | Demo script | `certiguard/docs/DEMO_TEST_METHODOLOGY.md` |
-| Hackathon prose | `nothingggg_us/docs/CertiGuard_Final_Implementation.md` |
+| Hackathon prose | `docs/CertiGuard_Final_Implementation.md` |
 | Product README | `certiguard/README.md` |
 
 **Slide tip:** Say once—**guide L6/L8** vs **code L5/L6 behavioral**—then use **this file’s** numbering for the rest of the talk.

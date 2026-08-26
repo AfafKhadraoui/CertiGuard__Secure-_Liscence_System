@@ -37,7 +37,7 @@ For a hackathon setting, we optimized for **delivery speed + architectural compl
 
 - **Rapid implementation velocity**: enabled fast prototyping and iteration of multiple security layers in parallel.
 - **Strong ecosystem fit**:
-  - `PyNaCl` / cryptography stack for reliable Ed25519 workflows
+   - `cryptography` for reliable Ed25519 workflows
   - `scikit-learn` for Isolation Forest anomaly detection
   - `Flask` for lightweight audit dashboard and APIs
 - **Readable codebase for judges**: clear Python modules made architecture easier to evaluate live.
@@ -93,7 +93,7 @@ CertiGuard targets B2B on-premise environments where internet access is constrai
 
 | Component | Technology | Reason | Alternative Considered |
 |---|---|---|---|
-| Ed25519 signing | PyNaCl / Python crypto stack | Production-tested, modern elliptic-curve signatures, robust verification semantics | RSA (rejected: larger keys/signatures, slower operations, unnecessary legacy complexity for this use case) |
+| Ed25519 signing | `cryptography` Ed25519 | Production-tested, modern elliptic-curve signatures, robust verification semantics | RSA (rejected: larger keys/signatures, slower operations, unnecessary legacy complexity for this use case) |
 | AI detection | scikit-learn IsolationForest | Works without labeled fraud data, lightweight for offline anomaly scoring | Supervised ML (rejected: no high-quality labeled fraud dataset for training in hackathon scope) |
 | Dashboard/API | Flask | Lightweight, fast setup, easy local hosting for demo and audit visualization | Django (rejected: overkill for MVP dashboard and increased setup overhead) |
 | Hardware reading | `platform` + `subprocess` + OS probes | Practical cross-platform collection path with graceful fallbacks | WMI-only (rejected: Windows-only and non-portable) |
@@ -260,7 +260,7 @@ The following flow is designed for a live hackathon demonstration:
 1. Install dependencies:
 
 ```bash
-pip install PyNaCl scikit-learn numpy flask psutil requests
+pip install -e .
 ```
 
 2. Issue a demo license:
