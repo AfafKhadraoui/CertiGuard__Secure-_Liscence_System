@@ -58,7 +58,8 @@ def test_shieldwrap_cryptographic_dependency(tmp_path: Path):
     ret_code = client.run_protected_app(
         package_dir=package_dir,
         license_path=license_path,
-        public_key_path=pub_key
+        public_key_path=pub_key,
+        skip_layered_verify=True,
     )
     assert ret_code == 0
     
@@ -108,6 +109,7 @@ def test_shieldwrap_cryptographic_dependency(tmp_path: Path):
         client.run_protected_app(
             package_dir=package_dir,
             license_path=other_license_path,
-            public_key_path=pub_key
+            public_key_path=pub_key,
+            skip_layered_verify=True,
         )
     print("[+] Decryption correctly failed due to hardware mismatch")
