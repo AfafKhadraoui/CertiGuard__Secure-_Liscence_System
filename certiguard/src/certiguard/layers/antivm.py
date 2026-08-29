@@ -14,10 +14,10 @@ def is_virtual_machine() -> bool:
     # 08:00:27 (VirtualBox), 00:05:69 (VMWare), 00:1C:42 (Parallels)
     try:
         if platform.system() == "Windows":
-            out = subprocess.check_output("getmac /FO CSV /V", shell=True).decode()
+            out = subprocess.check_output(["getmac", "/FO", "CSV", "/V"]).decode()
             if any(x in out.upper() for x in ["VIRTUALBOX", "VMWARE", "HYPER-V"]):
                 return True
-    except:
+    except Exception:
         pass
 
     # 2. Check for System Drivers/Services
@@ -33,10 +33,10 @@ def is_virtual_machine() -> bool:
     # 3. Check System Model via WMI
     try:
         if platform.system() == "Windows":
-            out = subprocess.check_output("wmic computersystem get model", shell=True).decode()
+            out = subprocess.check_output(["wmic", "computersystem", "get", "model"]).decode()
             if any(x in out.upper() for x in ["VIRTUALBOX", "VMWARE", "VIRTUAL MACHINE"]):
                 return True
-    except:
+    except Exception:
         pass
 
     return False

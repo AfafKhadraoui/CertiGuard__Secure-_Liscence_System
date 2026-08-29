@@ -41,7 +41,7 @@ def check_windows_debug() -> bool:
         )
         if is_remote.value:
             return True
-    except:
+    except Exception:
         pass
     return False
 
@@ -57,7 +57,7 @@ def check_linux_debug() -> bool:
                         pid = int(line.split(":")[1].strip())
                         if pid != 0:
                             return True
-    except:
+    except Exception:
         pass
     return False
 

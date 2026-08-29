@@ -60,16 +60,16 @@ cd ..\..\..
 Terminal 1 (dashboard):
 
 ```powershell
-cd c:\path\to\nothingggg_us\certiguard
+cd certiguard
 .\.venv\Scripts\Activate.ps1
 $env:PYTHONPATH = "src"
-python -m certiguard.cli dashboard --audit-log "c:\path\to\nothingggg_us\certiguard\demo_runs\cg_e2e\client_state\audit.log" --port 8080
+python -m certiguard.cli dashboard --audit-log "demo_runs\cg_e2e\client_state\audit.log" --port 8080
 ```
 
 Terminal 2 (harness):
 
 ```powershell
-cd c:\path\to\nothingggg_us\certiguard
+cd certiguard
 .\.venv\Scripts\Activate.ps1
 $env:PYTHONPATH = "src"
 python examples\cg_e2e_app\run_harness.py setup --clean
@@ -82,7 +82,7 @@ Open `http://localhost:8080`.
 ## Tests
 
 ```powershell
-cd c:\path\to\nothingggg_us\certiguard
+cd certiguard
 $env:PYTHONPATH = "src"
 pytest tests\ -q
 ```

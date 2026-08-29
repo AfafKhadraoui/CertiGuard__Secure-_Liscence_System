@@ -2,7 +2,7 @@
 > **2-Day Hackathon Sprint | Python SDK | Live Dashboard | Test Suite**  
 > Problématique #2 — April 2026
 
-> **Shipped tree (this repo):** `nothingggg_us/certiguard/` — Python package under `src/certiguard/` (not the flat `layer1_crypto.py` filenames shown below as teaching pseudocode). **Canonical file ↔ layer map:** [`certiguard/docs/LAYERS.md`](../certiguard/docs/LAYERS.md). **Aggregate smoke test:** `certiguard/tests/test_all_layers.py` (run from `certiguard/` with `PYTHONPATH=src`, or see script header).
+> **Shipped tree (this repo):** `certiguard/` — Python package under `src/certiguard/` (not the flat `layer1_crypto.py` filenames shown below as teaching pseudocode). **Canonical file ↔ layer map:** [`certiguard/docs/LAYERS.md`](../certiguard/docs/LAYERS.md). **Aggregate smoke test:** `certiguard/tests/test_all_layers.py` (run from `certiguard/` with `PYTHONPATH=src`, or see script header).
 
 ---
 
@@ -12,7 +12,7 @@ Before anything else — answers to your 4 immediate questions:
 
 ### 1. Should we rewrite in C?
 **NO. Absolutely not.** You have less than 2 days. Python is the right choice because:
-- `PyNaCl` gives you production-grade Ed25519 in 3 lines
+- `cryptography` gives you production-grade Ed25519 in a few lines
 - `scikit-learn` gives you Isolation Forest in 5 lines
 - `Flask` gives you a dashboard in 20 minutes
 - Rewriting in C would take your entire remaining time just for memory management
@@ -126,7 +126,7 @@ Denuvo (the most advanced game DRM) was cracked because it must eventually **dec
 ### Install Everything First
 
 ```bash
-pip install PyNaCl scikit-learn numpy flask psutil requests
+pip install -e .
 ```
 
 ---
@@ -1392,7 +1392,7 @@ if __name__ == '__main__':
 
 ### `tests/test_all_layers.py`
 
-**Implemented version:** `nothingggg_us/certiguard/tests/test_all_layers.py` (uses real `cryptography` Ed25519, `audit`, `verifier_server.check_honeypot_tripwire`). The block below is **retained as narrative pseudocode** for the hackathon story; do not expect those import paths to exist verbatim.
+**Implemented version:** `certiguard/tests/test_all_layers.py` (uses real `cryptography` Ed25519, `audit`, `verifier_server.check_honeypot_tripwire`). The block below is **retained as narrative pseudocode** for the hackathon story; do not expect those import paths to exist verbatim.
 
 ```python
 """

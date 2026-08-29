@@ -39,8 +39,8 @@ def test_debugger_detected_timing():
     
     try:
         # Should detect the "timing anomaly"
-        # The function uses 'threshold' in seconds
-        assert ad.check_timing_anomaly(threshold=0.1) is True
+        # The function uses threshold_ms, so 100 ms is the equivalent of 0.1 s.
+        assert ad.check_timing_anomaly(threshold_ms=100.0) is True
     finally:
         # Restore
         ad.time.perf_counter = original_perf

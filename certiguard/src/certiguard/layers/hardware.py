@@ -17,8 +17,8 @@ def get_machine_uuid() -> str:
     try:
         if system == "Windows":
             # Windows: WMI unique ID
-            cmd = "wmic csproduct get uuid"
-            return subprocess.check_output(cmd, shell=True).decode().splitlines()[1].strip()
+            output = subprocess.check_output(["wmic", "csproduct", "get", "uuid"]).decode()
+            return output.splitlines()[1].strip()
             
         elif system == "Linux":
             # Linux: DMI Product UUID (Requires root for some, fallback to machine-id)
@@ -31,9 +31,10 @@ def get_machine_uuid() -> str:
                     
         elif system == "Darwin": # macOS
             # macOS: IOPlatformUUID
-            cmd = "ioreg -rd1 -c IOPlatformExpertDevice | grep IOPlatformUUID"
-            out = subprocess.check_output(cmd, shell=True).decode()
-            return out.split('=')[-1].replace('"', '').strip()
+            output = subprocess.check_output(["ioreg", "-rd1", "-c", "IOPlatformExpertDevice"]).decode()
+            for line in output.splitlines():
+                if "IOPlatformUUID" in line:
+                    return line.split("=")[-1].replace('"', '').strip()
             
     except Exception:
         pass
